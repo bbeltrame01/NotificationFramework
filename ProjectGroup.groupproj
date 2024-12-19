@@ -1,0 +1,48 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{01F5D87A-8EFF-4F19-AF64-A58759C9987A}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="NotificationFrameworkProject.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="tests\NotificationFrameworkProjectTests.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="NotificationFrameworkProject">
+        <MSBuild Projects="NotificationFrameworkProject.dproj"/>
+    </Target>
+    <Target Name="NotificationFrameworkProject:Clean">
+        <MSBuild Projects="NotificationFrameworkProject.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="NotificationFrameworkProject:Make">
+        <MSBuild Projects="NotificationFrameworkProject.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="NotificationFrameworkProjectTests">
+        <MSBuild Projects="tests\NotificationFrameworkProjectTests.dproj"/>
+    </Target>
+    <Target Name="NotificationFrameworkProjectTests:Clean">
+        <MSBuild Projects="tests\NotificationFrameworkProjectTests.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="NotificationFrameworkProjectTests:Make">
+        <MSBuild Projects="tests\NotificationFrameworkProjectTests.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="NotificationFrameworkProject;NotificationFrameworkProjectTests"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="NotificationFrameworkProject:Clean;NotificationFrameworkProjectTests:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="NotificationFrameworkProject:Make;NotificationFrameworkProjectTests:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>
