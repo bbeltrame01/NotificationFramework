@@ -5,21 +5,28 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.CheckLst, uNotificationFramework,
-  uEmailNotification, uPushNotification, uSMSNotification;
+  uEmailNotification, uPushNotification, uSMSNotification, Vcl.ExtCtrls, System.Generics.Collections;
 
 type
   TFrMain = class(TForm)
     clbTipoNotificacao: TCheckListBox;
     cbbFrequencia: TComboBox;
-    btnTeste: TButton;
+    btnStart: TButton;
     memLogs: TMemo;
     labFrequencia: TLabel;
-    procedure btnTesteClick(Sender: TObject);
+    btnStop: TButton;
+    procedure btnStartClick(Sender: TObject);
+    procedure btnStopClick(Sender: TObject);
   private
-    { Private declarations }
-    procedure LogNotification(const AMessage: string);
+    FNotifications: TList<TNotification>;
+    procedure Start;
+    procedure Stop;
+    procedure CtrlButtons;
+    function GetFrequency: TNotificationFrequency;
+    function ValidateInputs(out ErrorMessage: string): Boolean;
   public
-    { Public declarations }
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
   end;
 
 var
@@ -29,42 +36,129 @@ implementation
 
 {$R *.dfm}
 
-procedure TFrMain.btnTesteClick(Sender: TObject);
+constructor TFrMain.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  FNotifications := TList<TNotification>.Create;
+end;
+
+destructor TFrMain.Destroy;
+begin
+  Stop;
+  FNotifications.Free;
+  inherited Destroy;
+end;
+
+procedure TFrMain.btnStartClick(Sender: TObject);
+begin
+  CtrlButtons;
+  Start;
+end;
+
+procedure TFrMain.btnStopClick(Sender: TObject);
+begin
+  CtrlButtons;
+  Stop;
+end;
+
+procedure TFrMain.CtrlButtons;
+begin
+  btnStart.Enabled := not btnStart.Enabled;
+  btnStop.Enabled := not btnStart.Enabled;
+end;
+
+function TFrMain.GetFrequency: TNotificationFrequency;
+begin
+  case cbbFrequencia.ItemIndex of
+    0: Result := nfDaily;
+    1: Result := nfWeekly;
+    2: Result := nfMonthly;
+  else
+    Result := nfNone;
+  end;
+end;
+
+function TFrMain.ValidateInputs(out ErrorMessage: string): Boolean;
+var
+  i: Integer;
+  bTipoNotificacao: Boolean;
+begin
+  Result := True;
+  ErrorMessage := '';
+
+  // Validar: Tipos de Notificação
+  bTipoNotificacao := False;
+  for i := 0 to Pred(clbTipoNotificacao.Count) do
+  begin
+    if clbTipoNotificacao.Checked[i] then
+      bTipoNotificacao := True;
+  end;
+
+  if not bTipoNotificacao then
+  begin
+    ErrorMessage := 'Nenhum tipo de notificação informado.';
+    Exit(False);
+  end;
+
+  // Validar: Frequência
+  if GetFrequency = nfNone then
+  begin
+    ErrorMessage := 'Frequência não informada.';
+    Exit(False);
+  end;
+end;
+
+procedure TFrMain.Start;
 const
   tnEMAIL = 0; tnPUSH = 1; tnSMS = 2;
 var
-  LNotification: TNotification;
   LFrequency: TNotificationFrequency;
+  ErrorMessage: string;
+
   procedure SendNotification(ANotificationSender: INotificationSender);
+  var
+    Notification: TNotification;
   begin
-    LNotification := TNotification.Create(ANotificationSender, 'Sample Notification', LFrequency);
+    Notification := TNotification.Create(ANotificationSender, 'Notificação Simples', LFrequency, memLogs);
+    FNotifications.Add(Notification);
+
     try
-      LNotification.Send;
-      LogNotification('Notification sent successfully.');
-    finally
-      LNotification.Free;
+      Notification.Start;
+    except
+      on E: Exception do
+        ShowMessage(Format('Erro ao realizar envio. %s', [E.Message]));
     end;
   end;
 begin
-  case cbbFrequencia.ItemIndex of
-    0: LFrequency := nfDaily;
-    1: LFrequency := nfWeekly;
-    2: LFrequency := nfMonthly;
+  if not ValidateInputs(ErrorMessage) then
+  begin
+    ShowMessage(ErrorMessage);
+    Exit;
   end;
-  { E-Mail }
+
+  memLogs.Lines.Add('Iniciando o processo de envio de notificações...');
+  LFrequency := GetFrequency;
+
+  // Criar e enviar notificações
   if clbTipoNotificacao.Checked[tnEMAIL] then
     SendNotification(TEmailNotification.Create);
-  { Notificações do Sistema }
+
   if clbTipoNotificacao.Checked[tnPUSH] then
     SendNotification(TPushNotification.Create);
-  { SMS }
+
   if clbTipoNotificacao.Checked[tnSMS] then
     SendNotification(TSMSNotification.Create);
 end;
 
-procedure TFrMain.LogNotification(const AMessage: string);
+procedure TFrMain.Stop;
+var
+  Notification: TNotification;
 begin
-  memLogs.Lines.Add(AMessage);
+  for Notification in FNotifications do
+    Notification.Free;
+  FNotifications.Clear;
+  memLogs.Lines.Add('Processo de envio finalizado.');
 end;
 
 end.
+

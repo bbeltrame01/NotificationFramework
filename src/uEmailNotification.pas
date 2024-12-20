@@ -9,6 +9,7 @@ type
   TEmailNotification = class(TInterfacedObject, INotificationSender)
   public
     procedure SendNotification(const AMessage: string);
+    function GetNotificationType: string;
   end;
 
 implementation
@@ -18,9 +19,16 @@ uses
 
 { TEmailNotification }
 
+function TEmailNotification.GetNotificationType: string;
+begin
+  Result := 'E-Mail';
+end;
+
 procedure TEmailNotification.SendNotification(const AMessage: string);
 begin
-  // Simulação de envio de e-mail
+  (*
+    TODO: Incluir processo de envio de e-mail aqui.
+  *)
   ShowMessage('E-mail enviado: ' + AMessage);
 end;
 

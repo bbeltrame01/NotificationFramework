@@ -25,7 +25,7 @@ object FrMain: TFrMain
     Top = 16
     Width = 577
     Height = 130
-    ItemHeight = 17
+    ItemHeight = 15
     Items.Strings = (
       'E-Mail'
       'Notifica'#231#245'es do Sistema'
@@ -44,20 +44,43 @@ object FrMain: TFrMain
       'Semanal'
       'Mensal')
   end
-  object btnTeste: TButton
+  object btnStart: TButton
     Left = 24
     Top = 181
     Width = 241
     Height = 49
-    Caption = 'Testar Notifica'#231#227'o'
+    Caption = 'Iniciar'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = 20
+    Font.Name = 'Segoe UI'
+    Font.Style = []
+    ParentFont = False
     TabOrder = 2
-    OnClick = btnTesteClick
+    OnClick = btnStartClick
   end
   object memLogs: TMemo
     Left = 24
     Top = 236
     Width = 577
     Height = 189
+    ReadOnly = True
+    TabOrder = 4
+  end
+  object btnStop: TButton
+    Left = 360
+    Top = 181
+    Width = 241
+    Height = 49
+    Caption = 'Parar'
+    Enabled = False
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = 20
+    Font.Name = 'Segoe UI'
+    Font.Style = []
+    ParentFont = False
     TabOrder = 3
+    OnClick = btnStopClick
   end
 end

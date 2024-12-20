@@ -9,6 +9,7 @@ type
   TPushNotification = class(TInterfacedObject, INotificationSender)
   public
     procedure SendNotification(const AMessage: string);
+    function GetNotificationType: string;
   end;
 
 implementation
@@ -18,9 +19,16 @@ uses
 
 { TPushNotification }
 
+function TPushNotification.GetNotificationType: string;
+begin
+  Result := 'Notificação do Sistema (push)';
+end;
+
 procedure TPushNotification.SendNotification(const AMessage: string);
 begin
-  // Simulação de envio de push
+  (*
+    TODO: Incluir processo de envio de push aqui.
+  *)
   ShowMessage('Push enviado: ' + AMessage);
 end;
 

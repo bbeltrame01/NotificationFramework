@@ -9,6 +9,7 @@ type
   TSMSNotification = class(TInterfacedObject, INotificationSender)
   public
     procedure SendNotification(const AMessage: string);
+    function GetNotificationType: string;
   end;
 
 implementation
@@ -18,9 +19,16 @@ uses
 
 { TSMSNotification }
 
+function TSMSNotification.GetNotificationType: string;
+begin
+  Result := 'SMS';
+end;
+
 procedure TSMSNotification.SendNotification(const AMessage: string);
 begin
-  // Simulação de envio de SMS
+  (*
+    TODO: Incluir processo de envio de SMS aqui.
+  *)
   ShowMessage('SMS enviado: ' + AMessage);
 end;
 
