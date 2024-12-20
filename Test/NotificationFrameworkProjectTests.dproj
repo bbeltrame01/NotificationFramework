@@ -1,6 +1,6 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
-        <ProjectGuid>{46297EC3-EACE-43A7-B43D-7A6C8C4EF716}</ProjectGuid>
+        <ProjectGuid>{3D80859A-DB52-4375-8AF4-CA8DE1817C52}</ProjectGuid>
         <ProjectVersion>19.5</ProjectVersion>
         <FrameworkType>None</FrameworkType>
         <Base>True</Base>
@@ -84,7 +84,10 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
-        <DCCReference Include="uNotificationFrameworkTests.pas"/>
+        <DCCReference Include="..\vcl_app\uFrMain.pas">
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="TestuNotificationFramework.pas"/>
         <DCCReference Include="..\src\uNotificationFramework.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>

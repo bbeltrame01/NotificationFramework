@@ -16,7 +16,8 @@ program NotificationFrameworkProjectTests;
 
 uses
   DUnitTestRunner,
-  uNotificationFrameworkTests in 'uNotificationFrameworkTests.pas',
+  uFrMain in '..\vcl_app\uFrMain.pas',
+  TestuNotificationFramework in 'TestuNotificationFramework.pas',
   uNotificationFramework in '..\src\uNotificationFramework.pas';
 
 {$R *.RES}

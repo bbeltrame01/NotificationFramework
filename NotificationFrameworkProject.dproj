@@ -962,7 +962,7 @@
                 <Platform value="Win64">False</Platform>
             </Platforms>
             <UnitTesting>
-                <TestProjectName>C:\Users\bruno\Documents\Embarcadero\Studio\Projects\NotificationFramework\tests\NotificationFrameworkProjectTests.dproj</TestProjectName>
+                <TestProjectName>C:\Users\bruno\Documents\Embarcadero\Studio\Projects\NotificationFramework\Test\NotificationFrameworkProjectTests.dproj</TestProjectName>
             </UnitTesting>
         </BorlandProject>
         <ProjectFileVersion>12</ProjectFileVersion>
