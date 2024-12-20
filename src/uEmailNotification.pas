@@ -16,6 +16,8 @@ implementation
 uses
   Dialogs;
 
+{ TEmailNotification }
+
 procedure TEmailNotification.SendNotification(const AMessage: string);
 begin
   // Simulação de envio de e-mail

@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.CheckLst, uNotificationFramework,
-  uEmailNotification;
+  uEmailNotification, uPushNotification, uSMSNotification;
 
 type
   TFrMain = class(TForm)
@@ -35,13 +35,9 @@ const
 var
   LNotification: TNotification;
   LFrequency: TNotificationFrequency;
-
-  procedure SendEmail();
-  var
-    EmailSender: INotificationSender;
+  procedure SendNotification(ANotificationSender: INotificationSender);
   begin
-    EmailSender := TEmailNotification.Create;
-    LNotification := TNotification.Create(EmailSender, 'Sample Notification', LFrequency);
+    LNotification := TNotification.Create(ANotificationSender, 'Sample Notification', LFrequency);
     try
       LNotification.Send;
       LogNotification('Notification sent successfully.');
@@ -55,9 +51,15 @@ begin
     1: LFrequency := nfWeekly;
     2: LFrequency := nfMonthly;
   end;
-
+  { E-Mail }
   if clbTipoNotificacao.Checked[tnEMAIL] then
-    SendEmail;
+    SendNotification(TEmailNotification.Create);
+  { Notificações do Sistema }
+  if clbTipoNotificacao.Checked[tnPUSH] then
+    SendNotification(TPushNotification.Create);
+  { SMS }
+  if clbTipoNotificacao.Checked[tnSMS] then
+    SendNotification(TSMSNotification.Create);
 end;
 
 procedure TFrMain.LogNotification(const AMessage: string);
