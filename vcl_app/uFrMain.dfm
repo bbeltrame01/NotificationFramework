@@ -1,6 +1,7 @@
 object FrMain: TFrMain
   Left = 0
   Top = 0
+  BorderIcons = [biSystemMenu, biMinimize]
   BorderStyle = bsSingle
   Caption = 'Framework de Notifica'#231#245'es'
   ClientHeight = 442

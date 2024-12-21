@@ -19,14 +19,14 @@ type
     FSender: INotificationSender;
     FMessage: string;
     FFrequency: TNotificationFrequency;
-    FLogMemo: TMemo;
+    FLogOutput: TStrings;
     FNextSend: TDateTime;
     FThread: TThread;
     FThreadTerminated: Boolean;
     procedure NotificationThreadExecute;
     procedure LogNotification(const AMessage: string; const AType: string = '');
   public
-    constructor Create(ASender: INotificationSender; const AMessage: string; AFrequency: TNotificationFrequency; ALogMemo: TMemo = nil);
+    constructor Create(ASender: INotificationSender; const AMessage: string; AFrequency: TNotificationFrequency; ALogOutput: TStrings = nil);
     destructor Destroy; override;
 
     procedure ScheduleNext;
@@ -40,37 +40,37 @@ implementation
 
 { TNotification }
 
-constructor TNotification.Create(ASender: INotificationSender; const AMessage: string; AFrequency: TNotificationFrequency; ALogMemo: TMemo);
+constructor TNotification.Create(ASender: INotificationSender; const AMessage: string; AFrequency: TNotificationFrequency; ALogOutput: TStrings = nil);
 begin
   inherited Create;
   if not Assigned(ASender) then
     raise Exception.Create('Sender não pode ser nil.');
 
-  FSender := ASender;
-  FMessage := AMessage;
-  FLogMemo := ALogMemo;
+  FSender    := ASender;
+  FMessage   := AMessage;
+  FLogOutput := ALogOutput;
   FFrequency := AFrequency;
-  FNextSend := 0;
-  FThread := nil;
+  FNextSend  := 0;
+  FThread    := nil;
   FThreadTerminated := False;
 end;
 
 destructor TNotification.Destroy;
 begin
-  Stop; // Garante que a thread será finalizada antes de destruir
+  Stop;
   inherited;
 end;
 
 procedure TNotification.LogNotification(const AMessage: string; const AType: string = '');
 begin
-  if Assigned(FLogMemo) then
+  if Assigned(FLogOutput) then
     TThread.Synchronize(nil,
       procedure
       begin
         if (AType = '') then
-          FLogMemo.Lines.Add(Format('[%s] %s', [DateTimeToStr(Now), AMessage]))
+          FLogOutput.Add(Format('[%s] %s', [DateTimeToStr(Now), AMessage]))
         else
-          FLogMemo.Lines.Add(Format('[%s][%s] %s', [DateTimeToStr(Now), AType, AMessage]));
+          FLogOutput.Add(Format('[%s][%s] %s', [DateTimeToStr(Now), AType, AMessage]));
       end);
 end;
 
@@ -119,8 +119,6 @@ begin
   if Assigned(FThread) then
     raise Exception.Create('Notificação já está em execução.');
 
-  FThreadTerminated := False;
-
   FThread := TThread.CreateAnonymousThread(
     procedure
     begin
@@ -128,6 +126,7 @@ begin
     end);
   FThread.FreeOnTerminate := False;
   FThread.Start;
+  LogNotification('Enviando...', FSender.GetNotificationType);
 end;
 
 procedure TNotification.Stop;
@@ -138,6 +137,7 @@ begin
     FThread.WaitFor;
     FreeAndNil(FThread);
   end;
+  LogNotification('Processo de envio finalizado.', FSender.GetNotificationType);
 end;
 
 end.

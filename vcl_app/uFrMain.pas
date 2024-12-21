@@ -51,13 +51,11 @@ end;
 
 procedure TFrMain.btnStartClick(Sender: TObject);
 begin
-  CtrlButtons;
   Start;
 end;
 
 procedure TFrMain.btnStopClick(Sender: TObject);
 begin
-  CtrlButtons;
   Stop;
 end;
 
@@ -65,6 +63,8 @@ procedure TFrMain.CtrlButtons;
 begin
   btnStart.Enabled := not btnStart.Enabled;
   btnStop.Enabled := not btnStart.Enabled;
+  clbTipoNotificacao.Enabled := btnStart.Enabled;
+  cbbFrequencia.Enabled := btnStart.Enabled;
 end;
 
 function TFrMain.GetFrequency: TNotificationFrequency;
@@ -119,7 +119,7 @@ var
   var
     Notification: TNotification;
   begin
-    Notification := TNotification.Create(ANotificationSender, 'Notificação Simples', LFrequency, memLogs);
+    Notification := TNotification.Create(ANotificationSender, 'Notificação Simples', LFrequency, memLogs.Lines);
     FNotifications.Add(Notification);
 
     try
@@ -132,10 +132,11 @@ var
 begin
   if not ValidateInputs(ErrorMessage) then
   begin
-    ShowMessage(ErrorMessage);
+    MessageDlg(ErrorMessage, mtWarning, [mbOk], 0);
     Exit;
   end;
 
+  CtrlButtons;
   memLogs.Lines.Add('Iniciando o processo de envio de notificações...');
   LFrequency := GetFrequency;
 
@@ -154,10 +155,13 @@ procedure TFrMain.Stop;
 var
   Notification: TNotification;
 begin
-  for Notification in FNotifications do
-    Notification.Free;
-  FNotifications.Clear;
-  memLogs.Lines.Add('Processo de envio finalizado.');
+  try
+    for Notification in FNotifications do
+      Notification.Free;
+    FNotifications.Clear;
+  finally
+    CtrlButtons;
+  end;
 end;
 
 end.
