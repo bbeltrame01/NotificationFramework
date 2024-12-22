@@ -51,13 +51,11 @@ end;
 
 procedure TFrMain.btnStartClick(Sender: TObject);
 begin
-  CtrlButtons;
   Start;
 end;
 
 procedure TFrMain.btnStopClick(Sender: TObject);
 begin
-  CtrlButtons;
   Stop;
 end;
 
@@ -65,6 +63,8 @@ procedure TFrMain.CtrlButtons;
 begin
   btnStart.Enabled := not btnStart.Enabled;
   btnStop.Enabled := not btnStart.Enabled;
+  clbTipoNotificacao.Enabled := btnStart.Enabled;
+  cbbFrequencia.Enabled := btnStart.Enabled;
 end;
 
 function TFrMain.GetFrequency: TNotificationFrequency;
@@ -99,13 +99,6 @@ begin
     ErrorMessage := 'Nenhum tipo de notificação informado.';
     Exit(False);
   end;
-
-  // Validar: Frequência
-  if GetFrequency = nfNone then
-  begin
-    ErrorMessage := 'Frequência não informada.';
-    Exit(False);
-  end;
 end;
 
 procedure TFrMain.Start;
@@ -113,13 +106,13 @@ const
   tnEMAIL = 0; tnPUSH = 1; tnSMS = 2;
 var
   LFrequency: TNotificationFrequency;
-  ErrorMessage: string;
+  LErrorMessage: string;
 
   procedure SendNotification(ANotificationSender: INotificationSender);
   var
     Notification: TNotification;
   begin
-    Notification := TNotification.Create(ANotificationSender, 'Notificação Simples', LFrequency, memLogs);
+    Notification := TNotification.Create(ANotificationSender, 'Notificação Simples', LFrequency, memLogs.Lines);
     FNotifications.Add(Notification);
 
     try
@@ -130,12 +123,13 @@ var
     end;
   end;
 begin
-  if not ValidateInputs(ErrorMessage) then
+  if not ValidateInputs(LErrorMessage) then
   begin
-    ShowMessage(ErrorMessage);
+    MessageDlg(LErrorMessage, mtWarning, [mbOk], 0);
     Exit;
   end;
 
+  CtrlButtons;
   memLogs.Lines.Add('Iniciando o processo de envio de notificações...');
   LFrequency := GetFrequency;
 
@@ -154,10 +148,13 @@ procedure TFrMain.Stop;
 var
   Notification: TNotification;
 begin
-  for Notification in FNotifications do
-    Notification.Free;
-  FNotifications.Clear;
-  memLogs.Lines.Add('Processo de envio finalizado.');
+  try
+    for Notification in FNotifications do
+      Notification.Free;
+    FNotifications.Clear;
+  finally
+    CtrlButtons;
+  end;
 end;
 
 end.

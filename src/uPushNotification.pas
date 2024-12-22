@@ -21,7 +21,7 @@ uses
 
 function TPushNotification.GetNotificationType: string;
 begin
-  Result := 'Notificação do Sistema (push)';
+  Result := 'Push';
 end;
 
 procedure TPushNotification.SendNotification(const AMessage: string);
@@ -29,7 +29,7 @@ begin
   (*
     TODO: Incluir processo de envio de push aqui.
   *)
-  ShowMessage('Push enviado: ' + AMessage);
+  MessageDlg('Push enviado: ' + AMessage, mtInformation, [mbOK], 0);
 end;
 
 end.

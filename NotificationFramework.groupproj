@@ -1,12 +1,12 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
-        <ProjectGuid>{01F5D87A-8EFF-4F19-AF64-A58759C9987A}</ProjectGuid>
+        <ProjectGuid>{C6D3B062-BDE7-49C9-B903-FB880767A2EE}</ProjectGuid>
     </PropertyGroup>
     <ItemGroup>
         <Projects Include="NotificationFrameworkProject.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="tests\NotificationFrameworkProjectTests.dproj">
+        <Projects Include="Test\NotificationFrameworkProjectTests.dproj">
             <Dependencies/>
         </Projects>
     </ItemGroup>
@@ -27,13 +27,13 @@
         <MSBuild Projects="NotificationFrameworkProject.dproj" Targets="Make"/>
     </Target>
     <Target Name="NotificationFrameworkProjectTests">
-        <MSBuild Projects="tests\NotificationFrameworkProjectTests.dproj"/>
+        <MSBuild Projects="Test\NotificationFrameworkProjectTests.dproj"/>
     </Target>
     <Target Name="NotificationFrameworkProjectTests:Clean">
-        <MSBuild Projects="tests\NotificationFrameworkProjectTests.dproj" Targets="Clean"/>
+        <MSBuild Projects="Test\NotificationFrameworkProjectTests.dproj" Targets="Clean"/>
     </Target>
     <Target Name="NotificationFrameworkProjectTests:Make">
-        <MSBuild Projects="tests\NotificationFrameworkProjectTests.dproj" Targets="Make"/>
+        <MSBuild Projects="Test\NotificationFrameworkProjectTests.dproj" Targets="Make"/>
     </Target>
     <Target Name="Build">
         <CallTarget Targets="NotificationFrameworkProject;NotificationFrameworkProjectTests"/>

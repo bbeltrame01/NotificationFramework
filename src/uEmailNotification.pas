@@ -29,7 +29,7 @@ begin
   (*
     TODO: Incluir processo de envio de e-mail aqui.
   *)
-  ShowMessage('E-mail enviado: ' + AMessage);
+  MessageDlg('E-mail enviado: ' + AMessage, mtInformation, [mbOK], 0);
 end;
 
 end.

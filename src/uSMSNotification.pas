@@ -29,7 +29,7 @@ begin
   (*
     TODO: Incluir processo de envio de SMS aqui.
   *)
-  ShowMessage('SMS enviado: ' + AMessage);
+  MessageDlg('SMS enviado: ' + AMessage, mtInformation, [mbOK], 0);
 end;
 
 end.
