@@ -99,13 +99,6 @@ begin
     ErrorMessage := 'Nenhum tipo de notificação informado.';
     Exit(False);
   end;
-
-  // Validar: Frequência
-  if GetFrequency = nfNone then
-  begin
-    ErrorMessage := 'Frequência não informada.';
-    Exit(False);
-  end;
 end;
 
 procedure TFrMain.Start;
@@ -113,7 +106,7 @@ const
   tnEMAIL = 0; tnPUSH = 1; tnSMS = 2;
 var
   LFrequency: TNotificationFrequency;
-  ErrorMessage: string;
+  LErrorMessage: string;
 
   procedure SendNotification(ANotificationSender: INotificationSender);
   var
@@ -130,9 +123,9 @@ var
     end;
   end;
 begin
-  if not ValidateInputs(ErrorMessage) then
+  if not ValidateInputs(LErrorMessage) then
   begin
-    MessageDlg(ErrorMessage, mtWarning, [mbOk], 0);
+    MessageDlg(LErrorMessage, mtWarning, [mbOk], 0);
     Exit;
   end;
 
