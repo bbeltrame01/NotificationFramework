@@ -32,6 +32,7 @@ object FrMain: TFrMain
       'Notifica'#231#245'es do Sistema'
       'SMS')
     TabOrder = 0
+    OnClickCheck = UpdateParams
   end
   object cbbFrequencia: TComboBox
     Left = 91
@@ -39,7 +40,10 @@ object FrMain: TFrMain
     Width = 174
     Height = 23
     Style = csDropDownList
+    ItemIndex = 0
     TabOrder = 1
+    Text = 'Di'#225'ria'
+    OnChange = UpdateParams
     Items.Strings = (
       'Di'#225'ria'
       'Semanal'
