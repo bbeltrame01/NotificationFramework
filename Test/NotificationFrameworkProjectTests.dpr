@@ -18,10 +18,7 @@ uses
   DUnitTestRunner,
   uFrMain in '..\vcl_app\uFrMain.pas',
   TestuNotificationFramework in 'TestuNotificationFramework.pas',
-  uNotificationFramework in '..\src\uNotificationFramework.pas',
-  uEmailNotification in '..\src\uEmailNotification.pas',
-  uPushNotification in '..\src\uPushNotification.pas',
-  uSMSNotification in '..\src\uSMSNotification.pas';
+  uNotificationFramework in '..\src\uNotificationFramework.pas';
 
 {$R *.RES}
 

@@ -17,12 +17,27 @@ type
 
   { E-Mail }
 
+  IEmailConfigService = interface
+    ['{7E5A19B3-64FC-4152-A34F-EF066624C644}']
+    procedure ConfigureSMTP(const AServer: string; const APort: Integer);
+    procedure SetCredentials(const AUsername, APassword: string);
+  end;
+
+  TEmailConfigService = class(TInterfacedObject, IEmailConfigService)
+  public
+    procedure ConfigureSMTP(const AServer: string; const APort: Integer);
+    procedure SetCredentials(const AUsername, APassword: string);
+  end;
+
   TEmailNotification = class(TInterfacedObject, INotificationSender)
+  private
+    FEmailConfigService: IEmailConfigService;
   protected
     procedure SendNotification(const AMessage: string);
     function GetNotificationType: string;
   public
-    procedure ConfigureEmailSMTP;
+    constructor Create(AEmailConfigService: IEmailConfigService);
+    destructor Destroy; override;
   end;
 
   { Notificação do Sistema }
@@ -39,8 +54,6 @@ type
   protected
     procedure SendNotification(const AMessage: string);
     function GetNotificationType: string;
-  public
-    procedure ConfigureOperadora;
   end;
 
   { Manter Logs }
@@ -65,9 +78,9 @@ type
 
   TNextSendNotification = class
   private
-    FNextSend: TDateTime;
     FFrequency: TNotificationFrequency;
   public
+    FNextSend: TDateTime;
     constructor Create;
     procedure Configure(AFrequency: TNotificationFrequency);
     procedure ScheduleNext;
@@ -89,7 +102,7 @@ type
 
   TNotification = class(TInterfacedObject, INotification)
   private
-    FLogNotification: TLogNotification;
+    FLogNotification: ILogNotification;
     FNextSend: TNextSendNotification;
     FSenders: TList<INotificationSender>;
     FFrequency: TNotificationFrequency;
@@ -113,13 +126,22 @@ implementation
 { TNotificationFactory }
 
 class function TNotificationFactory.NotificationTypeFactory(ANotificationType: TNotificationType): INotificationSender;
+var
+  LEmailConfigService: IEmailConfigService;
 begin
   case ANotificationType of
-    ntEmail: result := TEmailNotification.Create;
-    ntPush:  result := TPushNotification.Create;
-    ntSMS:   result := TSMSNotification.Create;
+    ntEmail:
+    begin
+      LEmailConfigService := TEmailConfigService.Create;
+      LEmailConfigService.ConfigureSMTP('smtp.server.com', 465);
+      LEmailConfigService.SetCredentials('username', 'password');
+
+      result := TEmailNotification.Create(LEmailConfigService);
+    end;
+    ntPush: result := TPushNotification.Create;
+    ntSMS:  result := TSMSNotification.Create;
   else
-    raise Exception.Create('Tipo de Notificação inválido ou inexistente');
+    raise Exception.Create('Tipo de Notificação inválido ou inexistente.');
   end;
 end;
 
@@ -141,7 +163,6 @@ destructor TNotification.Destroy;
 begin
   Stop;
   FSenders.Free;
-  FLogNotification.Free;
   FNextSend.Free;
   FStopEvent.Free;
   inherited;
@@ -159,9 +180,19 @@ end;
 procedure TNotification.UpdateParams(const ATypes: TArray<TNotificationType>; const AMessage: string; AFrequency: TNotificationFrequency);
 begin
   FMessage := AMessage;
-  FFrequency := AFrequency;
-  if Assigned(FNextSend) then
-    FNextSend.Configure(AFrequency);
+
+  if (FFrequency<>AFrequency) then
+  begin
+    FFrequency := AFrequency;
+    if Assigned(FNextSend) then
+    begin
+      FNextSend.Configure(AFrequency);
+      FNextSend.ScheduleNext;
+      if FNextSend.FNextSend > 0 then
+        FLogNotification.LogNotification(Format('Próxima notificação agendada para %s', [DateTimeToStr(FNextSend.FNextSend)]));
+    end;
+  end;
+
   CreateSenders(ATypes);
 end;
 
@@ -193,12 +224,14 @@ begin
       if (Now >= FNextSend.FNextSend) then
       begin
         try
-          for var Sender in FSenders do
+          for var LSender in FSenders do
           begin
-            Sender.SendNotification(FMessage);
-            FLogNotification.LogNotification('Envio realizado com sucesso.', Sender.GetNotificationType);
+            LSender.SendNotification(FMessage);
+            FLogNotification.LogNotification('Envio realizado com sucesso.', LSender.GetNotificationType);
           end;
           FNextSend.ScheduleNext;
+          if FNextSend.FNextSend > 0 then
+            FLogNotification.LogNotification(Format('Próxima notificação agendada para %s', [DateTimeToStr(FNextSend.FNextSend)]));
         except
           on E: Exception do
             FLogNotification.LogNotification(Format('Erro no envio: %s', [E.Message]));
@@ -306,13 +339,33 @@ begin
   end;
 end;
 
-{ TEmailNotification }
+{ TEmailConfigService }
 
-procedure TEmailNotification.ConfigureEmailSMTP;
+procedure TEmailConfigService.ConfigureSMTP(const AServer: string; const APort: Integer);
 begin
   (*
     TODO: Configurar SMTP para envio de E-Mail
   *)
+end;
+
+procedure TEmailConfigService.SetCredentials(const AUsername, APassword: string);
+begin
+  (*
+    TODO: Configurar Credenciais para envio de E-Mail
+  *)
+end;
+
+{ TEmailNotification }
+
+constructor TEmailNotification.Create(AEmailConfigService: IEmailConfigService);
+begin
+  FEmailConfigService := AEmailConfigService;
+end;
+
+destructor TEmailNotification.Destroy;
+begin
+  FEmailConfigService := nil;
+  inherited;
 end;
 
 function TEmailNotification.GetNotificationType: string;
@@ -344,13 +397,6 @@ begin
 end;
 
 { TSMSNotification }
-
-procedure TSMSNotification.ConfigureOperadora;
-begin
-  (*
-    TODO: Configurar Operadora para envio de SMS
-  *)
-end;
 
 function TSMSNotification.GetNotificationType: string;
 begin
