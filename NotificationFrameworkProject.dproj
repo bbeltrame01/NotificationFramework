@@ -102,10 +102,7 @@
             <Form>FrMain</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="src\uEmailNotification.pas"/>
         <DCCReference Include="src\uNotificationFramework.pas"/>
-        <DCCReference Include="src\uPushNotification.pas"/>
-        <DCCReference Include="src\uSMSNotification.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
