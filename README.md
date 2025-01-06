@@ -1,6 +1,6 @@
 # 🚀 Notification Framework
 
-Framework genérico de notificações com integração e agendamento configurável. Ideal para projetos Delphi que precisam de uma solução flexível e extensível para envio de notificações.
+Framework genérico de notificações com integração e agendamento configurável. Ideal para projetos Delphi que precisam de uma solução flexível e extensível para envio de notificações. A implementação utiliza princípios SOLID e padrões como Factory Method e Dependency Injection para facilitar a manutenção e expansão do sistema.
 
 ---
 
@@ -17,10 +17,7 @@ Framework genérico de notificações com integração e agendamento configuráv
 
 ```plaintext
 ├── src/                  # Código do framework
-│   ├── uEmailNotification.pas
 │   ├── uNotificationFramework.pas
-│   ├── uPushNotification.pas
-│   ├── uSMSNotification.pas
 ├── test/                 # Testes unitários
 │   ├── TestuNotificationFramework.pas
 ├── vcl_app/              # Aplicativo VCL de demonstração
@@ -29,6 +26,55 @@ Framework genérico de notificações com integração e agendamento configuráv
 │   ├── NotificationDemo.exe (pré-compilado)
 ├── README.md             # Documentação
 ```
+
+### 🏷️ Tipos e Enumerações
+- `TNotificationType`: Define os tipos de notificação suportados (ntEmail, ntPush, ntSMS).
+- `TNotificationFrequency`: Define as frequências de notificação (Diária, Semanal, Mensal, Nenhuma).
+
+### 🔗 Interfaces Principais
+
+#### `INotificationSender`
+Interface para envio de notificações. Cada tipo de notificação deve implementar esta interface.
+- `SendNotification`: Envia uma mensagem.
+- `GetNotificationType`: Retorna o tipo da notificação.
+
+#### `IEmailConfigService`
+Interface para configuração de envio de e-mails.
+- `ConfigureSMTP`: Configura o servidor SMTP.
+- `SetCredentials`: Define credenciais para autenticação.
+
+#### `ILogNotification`
+Interface para registro de logs de notificações.
+- `LogNotification`: Registra logs com data, hora, mensagens e tipos.
+
+### 🏗️ Classes Principais
+
+#### `TEmailNotification`
+Implementação de envio de notificações por e-mail.
+- Depende de `IEmailConfigService` para configuração SMTP.
+
+#### `TPushNotification`
+Implementação de envio de notificações push.
+
+#### `TSMSNotification`
+Implementação de envio de notificações via SMS.
+
+#### `TLogNotification`
+Implementação para registro de logs.
+- Utiliza `TStrings` para armazenar logs.
+- Usa `TCriticalSection` para garantir a thread safety.
+
+#### `TNextSendNotification`
+Classe para calcular a próxima data de envio de notificação com base na frequência configurada.
+
+#### `TNotificationFactory`
+Factory Method para criar instâncias de `INotificationSender` com base no tipo de notificação.
+
+#### `TNotification`
+Classe principal para gerenciar o ciclo de vida das notificações.
+- Cria instâncias de `INotificationSender`.
+- Gerencia threads para envio de notificações.
+- Valida entradas e configurações.
 
 ---
 
@@ -49,6 +95,51 @@ Framework genérico de notificações com integração e agendamento configuráv
 
 ---
 
+## ➕ Incluir Novos Tipos de Envio
+Para adicionar um novo tipo de notificação, siga os passos abaixo:
+
+1. **Criar uma nova classe que implemente `INotificationSender`:**
+   ```delphi
+   TNewNotification = class(TInterfacedObject, INotificationSender)
+   protected
+     procedure SendNotification(const AMessage: string);
+     function GetNotificationType: string;
+   end;
+
+   procedure TNewNotification.SendNotification(const AMessage: string);
+   begin
+     // Lógica para envio da nova notificação.
+   end;
+
+   function TNewNotification.GetNotificationType: string;
+   begin
+     Result := 'NewNotification';
+   end;
+   ```
+
+2. **Atualizar o `TNotificationType`:**
+   Adicione um novo valor ao enum:
+   ```delphi
+   TNotificationType = (ntEmail=0, ntPush=1, ntSMS=2, ntNew=3);
+   ```
+
+3. **Atualizar o `TNotificationFactory`:**
+   Inclua o caso para o novo tipo:
+   ```delphi
+   class function TNotificationFactory.NotificationTypeFactory(ANotificationType: TNotificationType): INotificationSender;
+   begin
+     case ANotificationType of
+       ntNew: Result := TNewNotification.Create;
+       // Outros casos...
+     else
+       raise Exception.Create('Tipo de Notificação inválido ou inexistente.');
+     end;
+   end;
+   ```
+
+4. **Testar a Implementação:**
+   Certifique-se de que o novo tipo de notificação esteja funcionando conforme o esperado.
+
 ## 📚 Uso
 
 ### 💡 Framework
@@ -61,12 +152,24 @@ Framework genérico de notificações com integração e agendamento configuráv
 2. Configure o envio de notificações:
    ```delphi
    var
-     Notification: TNotification;
-     Sender: INotificationSender;
+      Notification: INotification;
+      LogOutput: TStringList; // Opcional
    begin
-     Sender := TEmailNotificationSender.Create;
-     Notification := TNotification.Create(Sender, 'Teste de notificação', nfDaily);
-     Notification.Start;
+      LogOutput := TStringList.Create;
+      try
+         Notification := TNotification.Create([
+            ntEmail, ntPush, ntNew
+         ], 'Mensagem de Teste', nfDaily, LogOutput);
+         Notification.Start;
+
+         // Aguarde algum tempo para testes.
+         Sleep(10000);
+
+         Notification.Stop;
+         ShowMessage(LogOutput.Text);
+      finally
+         LogOutput.Free;
+      end;
    end;
    ```
 
