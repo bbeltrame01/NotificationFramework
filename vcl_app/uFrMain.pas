@@ -19,7 +19,7 @@ type
     procedure btnStopClick(Sender: TObject);
     procedure UpdateParams(Sender: TObject);
   private
-    FNotification: TNotification;
+    FNotification: INotification;
     procedure Start;
     procedure Stop;
     procedure CtrlButtons;
@@ -86,7 +86,12 @@ end;
 
 procedure TFrMain.Start;
 begin
-  FNotification := TNotification.Create(GetTypes(), SIMPLE_MESSAGE, TNotificationFrequency(cbbFrequencia.ItemIndex), memLogs.Lines);
+  FNotification := TNotification.Create(
+    GetTypes(),                                      // Tipos de Envio: [ntEmail, ntPush, ntSMS]
+    SIMPLE_MESSAGE,                                  // Mensagem: 'Notificação Simples'
+    TNotificationFrequency(cbbFrequencia.ItemIndex), // Frequência de Envio: (nfDaily=0, nfWeekly=1, nfMonthly=2)
+    memLogs.Lines                                    // (Opcional) Logs: TStrings
+  );
   FNotification.Start;
 end;
 
@@ -97,6 +102,7 @@ begin
     try
       FNotification.Stop;
     finally
+      FNotification := nil;
       CtrlButtons;
     end;
   end;

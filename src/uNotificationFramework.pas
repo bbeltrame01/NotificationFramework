@@ -165,6 +165,7 @@ begin
   FSenders.Free;
   FNextSend.Free;
   FStopEvent.Free;
+  FLogNotification := nil;
   inherited;
 end;
 
@@ -251,10 +252,10 @@ begin
     FStopEvent.SetEvent;
     FThread.WaitFor;
     FreeAndNil(FThread);
-  end;
 
-  if Assigned(FLogNotification) then
-    FLogNotification.LogNotification('Processo de envio finalizado.');
+    if Assigned(FLogNotification) then
+      FLogNotification.LogNotification('Processo de envio finalizado.');
+  end;
 end;
 
 function TNotification.ValidateInputs(out ErrorMessage: string): Boolean;
