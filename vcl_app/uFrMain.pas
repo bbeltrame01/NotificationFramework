@@ -17,7 +17,8 @@ type
     btnStop: TButton;
     procedure btnStartClick(Sender: TObject);
     procedure btnStopClick(Sender: TObject);
-    procedure UpdateParams(Sender: TObject);
+    procedure clbTipoNotificacaoClickCheck(Sender: TObject);
+    procedure cbbFrequenciaChange(Sender: TObject);
   private
     FNotification: INotification;
     procedure Start;
@@ -69,7 +70,6 @@ end;
 
 procedure TFrMain.btnStartClick(Sender: TObject);
 begin
-  CtrlButtons;
   Start;
 end;
 
@@ -78,8 +78,31 @@ begin
   Stop;
 end;
 
+procedure TFrMain.cbbFrequenciaChange(Sender: TObject);
+begin
+  if Assigned(FNotification) then
+    FNotification.UpdateParams(GetTypes(), SIMPLE_MESSAGE, TNotificationFrequency(cbbFrequencia.ItemIndex));
+end;
+
+procedure TFrMain.clbTipoNotificacaoClickCheck(Sender: TObject);
+begin
+  if Assigned(FNotification) then
+  begin
+    if (Length(GetTypes)=0) then
+    begin
+      MessageDlg('Nenhum Tipo de Notificação informado.', TMsgDlgType.mtError, [mbOk], 0);
+      clbTipoNotificacao.Checked[clbTipoNotificacao.ItemIndex] := True;
+      Abort;
+    end;
+
+    FNotification.UpdateParams(GetTypes(), SIMPLE_MESSAGE, TNotificationFrequency(cbbFrequencia.ItemIndex));
+  end;
+end;
+
 procedure TFrMain.CtrlButtons;
 begin
+  if Length(GetTypes)=0 then Abort;
+
   btnStart.Enabled := not btnStart.Enabled;
   btnStop.Enabled  := not btnStart.Enabled;
 end;
@@ -93,6 +116,7 @@ begin
     memLogs.Lines                                    // (Opcional) Logs: TStrings
   );
   FNotification.Start;
+  CtrlButtons;
 end;
 
 procedure TFrMain.Stop;
@@ -106,12 +130,6 @@ begin
       CtrlButtons;
     end;
   end;
-end;
-
-procedure TFrMain.UpdateParams(Sender: TObject);
-begin
-  if Assigned(FNotification) then
-    FNotification.UpdateParams(GetTypes(), SIMPLE_MESSAGE, TNotificationFrequency(cbbFrequencia.ItemIndex));
 end;
 
 end.

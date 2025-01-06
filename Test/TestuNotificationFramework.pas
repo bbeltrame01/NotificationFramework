@@ -178,8 +178,8 @@ procedure TestTNotification.TestSendNotification;
 var
   LEmailSender: INotificationSender;
 begin
-  LEmailSender := TEmailNotification.Create(FMockSender.EmailConfigService);
   try
+    LEmailSender := TEmailNotification.Create(FMockSender.EmailConfigService);
     FMockSender.RaiseError := False;
     FMockSender.SendNotification(SIMPLE_MESSAGE);
 
@@ -229,14 +229,14 @@ procedure TestTNotification.TestInvalidMessage;
 var
   LNotification: INotification;
 begin
-  LNotification := TNotification.Create([ntEmail], '', nfDaily, FLogOutput);
   try
+    LNotification := TNotification.Create([ntEmail], '', nfDaily, FLogOutput);
     LNotification.Start;
 
     Fail('Exceção esperada ao iniciar uma thread sem mensagem informada.');
   except
     on E: Exception do
-      CheckEquals(E.Message, 'Nenhuma mensagem informada.', 'Mensagem de erro incorreta.');
+      Check(E.Message.Contains('Nenhuma mensagem informada.'), 'Mensagem de erro incorreta.');
   end;
 end;
 
@@ -245,14 +245,14 @@ procedure TestTNotification.TestInvalidFrequency;
 var
   LNotification: INotification;
 begin
-  LNotification := TNotification.Create([ntEmail], SIMPLE_MESSAGE, nfNone, FLogOutput);
   try
+    LNotification := TNotification.Create([ntEmail], SIMPLE_MESSAGE, nfNone, FLogOutput);
     LNotification.Start;
 
     Fail('Exceção esperada ao iniciar uma thread com Frequência inválida (nfNone).');
   except
     on E: Exception do
-      CheckEquals(E.Message, 'Frequência não informada.', 'Mensagem de erro incorreta.');
+      Check(E.Message.Contains('Frequência não informada.'), 'Mensagem de erro incorreta.');
   end;
 end;
 

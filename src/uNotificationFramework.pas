@@ -93,6 +93,19 @@ type
     class function NotificationTypeFactory(ANotificationType: TNotificationType): INotificationSender;
   end;
 
+  { Thread }
+
+  TNotificationThread = class(TThread)
+  private
+    FTask: TProc;
+  protected
+    procedure Execute; override;
+  public
+    constructor Create(ATask: TProc; ACreateSuspended: Boolean = True);
+  end;
+
+  { Principal }
+
   INotification = interface
     ['{29A17DDF-D2C6-46D3-B568-1136B89BB7E0}']
     procedure Start;
@@ -145,6 +158,35 @@ begin
   end;
 end;
 
+{ TNotificationThread }
+
+constructor TNotificationThread.Create(ATask: TProc; ACreateSuspended: Boolean = True);
+begin
+  inherited Create(ACreateSuspended); // Criar suspenso
+  FreeOnTerminate := False;
+  FTask := ATask;
+end;
+
+procedure TNotificationThread.Execute;
+begin
+  if Assigned(FTask) then
+  begin
+    try
+      FTask();
+    except
+      on E: Exception do
+      begin
+        TThread.Synchronize(nil,
+          procedure
+          begin
+            MessageDlg('Erro na thread: ' + E.Message, mtError, [mbOK], 0);
+          end
+        );
+      end;
+    end;
+  end;
+end;
+
 { TNotification }
 
 constructor TNotification.Create(const ATypes: TArray<TNotificationType>; const AMessage: string; AFrequency: TNotificationFrequency; ALogOutput: TStrings);
@@ -154,7 +196,8 @@ begin
   FNextSend        := TNextSendNotification.Create;
   FStopEvent       := TEvent.Create(nil, True, False, '');
 
-  FLogNotification.LogNotification('Iniciando o processo de envio de notificações...');
+  if Assigned(FLogNotification) then
+    FLogNotification.LogNotification('Iniciando o processo de envio de notificações...');
 
   UpdateParams(ATypes, AMessage, AFrequency);
 end;
@@ -179,6 +222,8 @@ begin
 end;
 
 procedure TNotification.UpdateParams(const ATypes: TArray<TNotificationType>; const AMessage: string; AFrequency: TNotificationFrequency);
+var
+  LErrorMessage: string;
 begin
   FMessage := AMessage;
 
@@ -189,32 +234,36 @@ begin
     begin
       FNextSend.Configure(AFrequency);
       FNextSend.ScheduleNext;
-      if FNextSend.FNextSend > 0 then
+      if Assigned(FLogNotification) and (FNextSend.FNextSend > 0) then
         FLogNotification.LogNotification(Format('Próxima notificação agendada para %s', [DateTimeToStr(FNextSend.FNextSend)]));
     end;
   end;
 
   CreateSenders(ATypes);
+
+  if not ValidateInputs(LErrorMessage) then
+  begin
+    if Assigned(FLogNotification) then
+      FLogNotification.LogNotification(LErrorMessage);
+    raise Exception.Create(LErrorMessage);
+  end;
 end;
 
 procedure TNotification.Start;
-var
-  LErrorMessage: string;
 begin
   if Assigned(FThread) then
     raise Exception.Create('Notificação já está em execução.');
 
-  if not ValidateInputs(LErrorMessage) then
-    raise Exception.Create(LErrorMessage);
-
-  FThread := TThread.CreateAnonymousThread(
+  FThread := TNotificationThread.Create(
     procedure
     begin
       NotificationThreadExecute;
-    end);
-  FThread.FreeOnTerminate := False;
+    end
+  );
+  TNotificationThread(FThread).FreeOnTerminate := False;
   FThread.Start;
-  FLogNotification.LogNotification('Enviando...');
+  if Assigned(FLogNotification) then
+    FLogNotification.LogNotification('Enviando...');
 end;
 
 procedure TNotification.NotificationThreadExecute;
@@ -228,20 +277,27 @@ begin
           for var LSender in FSenders do
           begin
             LSender.SendNotification(FMessage);
-            FLogNotification.LogNotification('Envio realizado com sucesso.', LSender.GetNotificationType);
+            if Assigned(FLogNotification) then
+              FLogNotification.LogNotification('Envio realizado com sucesso.', LSender.GetNotificationType);
           end;
           FNextSend.ScheduleNext;
-          if FNextSend.FNextSend > 0 then
+          if Assigned(FLogNotification) and (FNextSend.FNextSend > 0) then
             FLogNotification.LogNotification(Format('Próxima notificação agendada para %s', [DateTimeToStr(FNextSend.FNextSend)]));
         except
           on E: Exception do
-            FLogNotification.LogNotification(Format('Erro no envio: %s', [E.Message]));
+            if Assigned(FLogNotification) then
+              FLogNotification.LogNotification(Format('Erro no envio: %s', [E.Message]))
+            else
+              MessageDlg(Format('Erro no envio: %s', [E.Message]), TMsgDlgType.mtError, [mbOk], 0);
         end;
       end;
     end;
   except
     on E: Exception do
-      FLogNotification.LogNotification(Format('Erro na thread: %s', [E.Message]));
+      if Assigned(FLogNotification) then
+        FLogNotification.LogNotification(Format('Erro na thread: %s', [E.Message]))
+      else
+        MessageDlg(Format('Erro no envio: %s', [E.Message]), TMsgDlgType.mtError, [mbOk], 0);
   end;
 end;
 
@@ -261,26 +317,31 @@ end;
 function TNotification.ValidateInputs(out ErrorMessage: string): Boolean;
 begin
   Result := True;
-  ErrorMessage := '';
+  ErrorMessage := 'Processo Abortado.';
 
   // Validar: Tipo de Notificação
   if not Assigned(FSenders) then
   begin
-    ErrorMessage := 'Tipo de Notificação inexistente.';
+    ErrorMessage := ErrorMessage + sLineBreak + 'Tipo de Notificação inexistente.';
+    Exit(False);
+  end else
+  if FSenders.Count = 0 then
+  begin
+    ErrorMessage := ErrorMessage + sLineBreak + 'Nenhum Tipo de Notificação informado.';
     Exit(False);
   end;
 
   // Validar: Mensagem
   if (FMessage = '') then
   begin
-    ErrorMessage := 'Nenhuma mensagem informada.';
+    ErrorMessage := ErrorMessage + sLineBreak + 'Nenhuma mensagem informada.';
     Exit(False);
   end;
 
   // Validar: Frequência
   if FNextSend.FFrequency = nfNone then
   begin
-    ErrorMessage := 'Frequência não informada.';
+    ErrorMessage := ErrorMessage + sLineBreak + 'Frequência não informada.';
     Exit(False);
   end;
 end;
