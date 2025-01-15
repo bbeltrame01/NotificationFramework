@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.CheckLst, uNotificationFramework,
-  Vcl.ExtCtrls, System.Generics.Collections;
+  Vcl.ExtCtrls, System.Generics.Collections, System.UITypes;
 
 type
   TFrMain = class(TForm)
