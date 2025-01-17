@@ -18,6 +18,9 @@ Framework genérico de notificações com integração e agendamento configuráv
 ```plaintext
 ├── src/                  # Código do framework
 │   ├── uNotificationFramework.pas
+│   ├── uEmailNotification.pas
+│   ├── uSMSNotification.pas
+│   ├── uPushNotification.pas
 ├── test/                 # Testes unitários
 │   ├── TestuNotificationFramework.pas
 ├── vcl_app/              # Aplicativo VCL de demonstração
@@ -98,43 +101,49 @@ Classe principal para gerenciar o ciclo de vida das notificações.
 ## ➕ Incluir Novos Tipos de Envio
 Para adicionar um novo tipo de notificação, siga os passos abaixo:
 
-1. **Criar uma nova classe que implemente `INotificationSender`:**
-   ```delphi
-   TNewNotification = class(TInterfacedObject, INotificationSender)
-   protected
-     procedure SendNotification(const AMessage: string);
-     function GetNotificationType: string;
-   end;
-
-   procedure TNewNotification.SendNotification(const AMessage: string);
-   begin
-     // Lógica para envio da nova notificação.
-   end;
-
-   function TNewNotification.GetNotificationType: string;
-   begin
-     Result := 'NewNotification';
-   end;
-   ```
-
-2. **Atualizar o `TNotificationType`:**
+1. **Atualizar o `TNotificationType`:**
    Adicione um novo valor ao enum:
    ```delphi
    TNotificationType = (ntEmail=0, ntPush=1, ntSMS=2, ntNew=3);
    ```
-
-3. **Atualizar o `TNotificationFactory`:**
-   Inclua o caso para o novo tipo:
+   
+2. **Criar uma nova unit com uma classe que implemente `INotificationSender`:**
    ```delphi
-   class function TNotificationFactory.NotificationTypeFactory(ANotificationType: TNotificationType): INotificationSender;
-   begin
-     case ANotificationType of
-       ntNew: Result := TNewNotification.Create;
-       // Outros casos...
-     else
-       raise Exception.Create('Tipo de Notificação inválido ou inexistente.');
+   uses
+	 uNotificationFramework;
+  
+   type
+     TNewNotification = class(TInterfacedObject, INotificationSender)
+     protected
+       procedure SendNotification(const AMessage: string);
+       function GetNotificationType: string;
      end;
-   end;
+
+     procedure TNewNotification.SendNotification(const AMessage: string);
+     begin
+       // Lógica para envio da nova notificação.
+     end;
+
+     function TNewNotification.GetNotificationType: string;
+     begin
+       Result := 'NewNotification';
+     end;
+   ```
+   
+3. **Incluir a nova unit no `uses` do `uNotificationFramework.pas`**
+	```delphi
+	implementation
+
+	uses
+	  uEmailNotification, uSMSNotification, uPushNotification, uNewNotification;
+	```
+
+4. **Adicionar o `initialization` com `TNotificationFactory`:**
+   Inclua ao final da unit a inicialização para o novo tipo:
+   ```delphi
+   initialization
+	 TNotificationFactory.SetNotification(ntNew,
+		function: INotificationSender begin Result := TNewNotification.Create; end);
    ```
 
 4. **Testar a Implementação:**
