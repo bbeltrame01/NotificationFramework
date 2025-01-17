@@ -4,7 +4,7 @@ interface
 
 uses
   TestFramework, Vcl.StdCtrls, System.SysUtils, uNotificationFramework, System.SyncObjs, Generics.Collections,
-  System.Classes, DateUtils;
+  System.Classes, DateUtils, uEmailNotification, uSMSNotification, uPushNotification;
 
 type
   TMockEmailNotification = class(TInterfacedObject, IEmailConfigService)
@@ -215,7 +215,7 @@ end;
 procedure TestTNotification.TestInvalidSender;
 begin
   try
-    TNotificationFactory.NotificationTypeFactory(TNotificationType(-1));
+    TNotificationFactory.GetNotification(TNotificationType(-1));
 
     Fail('Exceção esperada ao setar um Tipo de Notificação inválido.');
   except
